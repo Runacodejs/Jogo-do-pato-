@@ -2,141 +2,230 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Super Mario Runner</title>
+  <title>Pato Runner 2D - Game Over</title>
   <style>
     body {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
-      background: #5c94fc; /* Céu azul Mario */
-      overflow: hidden;
+      background: #cceeff;
       font-family: Arial, sans-serif;
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
     }
 
     #game {
+      position: relative;
       width: 800px;
       height: 250px;
       border: 2px solid #333;
-      position: relative;
+      background: #cceeff;
       overflow: hidden;
-      background: #5c94fc;
+      margin-top: 20px;
     }
 
-    /* Mario personagem */
-    #mario {
-      width: 50px;
-      height: 60px;
-      background: url("https://i.ibb.co/YZnSPvv/mario.png") no-repeat center/cover;
+    #pato {
       position: absolute;
-      bottom: 40px; /* fica em cima do chão */
+      width: 48px;
+      height: 48px;
+      bottom: 40px;
       left: 50px;
+      background: url("https://i.ibb.co/zxFmXHp/pato-sprite.png") 0 0/96px 48px;
+      animation: patoRun 0.3s steps(2) infinite;
     }
 
-    /* Chão estilo Mario */
     #chao {
+      position: absolute;
       width: 100%;
       height: 40px;
-      background: url("https://i.ibb.co/R3k4tk1/mario-ground.png") repeat-x;
-      position: absolute;
       bottom: 0;
-      left: 0;
+      background: #654321;
     }
 
-    /* Obstáculo: bloco estilo Mario */
-    .bloco {
-      width: 40px;
-      height: 40px;
-      background: url("https://i.ibb.co/FV8wCzH/mario-block.png") no-repeat center/cover;
+    .obstaculo { position: absolute; bottom: 40px; }
+    .arvore { width: 40px; height: 60px; background: green; }
+
+    .tiro {
       position: absolute;
-      bottom: 40px;
+      width: 10px;
+      height: 5px;
+      background: red;
     }
 
-    #score {
+    #score { position: absolute; top: 10px; right: 10px; font-weight: bold; font-size: 20px; }
+
+    #gameOver {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 20px;
-      font-weight: bold;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
       color: white;
-      text-shadow: 1px 1px 2px black;
+      font-size: 36px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      display: none;
     }
+
+    .game-btn { margin: 10px; padding: 10px 20px; font-size: 18px; cursor: pointer; border-radius: 8px; border: 2px solid #333; background: #ffcc00; }
+    .game-btn:active { background: #ffaa00; }
+
+    @keyframes patoRun { from { background-position: 0 0; } to { background-position: -96px 0; } }
   </style>
 </head>
 <body>
   <div id="game">
-    <div id="mario"></div>
+    <div id="pato"></div>
     <div id="chao"></div>
     <div id="score">0</div>
+    <div id="gameOver">
+      <div>💀 GAME OVER 💀</div>
+      <button onclick="restartGame()" class="game-btn">REINICIAR</button>
+    </div>
+  </div>
+
+  <div>
+    <button id="jumpBtn" class="game-btn">⬆️ Pular</button>
+    <button id="duckBtn" class="game-btn">⬇️ Abaixar</button>
+    <button id="shootBtn" class="game-btn">💥 Atirar</button>
   </div>
 
   <script>
-    const mario = document.getElementById("mario");
-    const game = document.getElementById("game");
-    const scoreDisplay = document.getElementById("score");
+    const game = document.getElementById('game');
+    const pato = document.getElementById('pato');
+    const scoreDisplay = document.getElementById('score');
+    const jumpBtn = document.getElementById('jumpBtn');
+    const duckBtn = document.getElementById('duckBtn');
+    const shootBtn = document.getElementById('shootBtn');
+    const gameOverDiv = document.getElementById('gameOver');
 
     let isJumping = false;
-    let position = 40; // altura inicial (em cima do chão)
+    let isDucking = false;
+    let position = 40;
     let score = 0;
+    let gameRunning = true; // controla o estado do jogo
 
     function jump() {
+      if (!gameRunning) return;
       if (isJumping) return;
       isJumping = true;
-
+      pato.style.animationPlayState = 'paused';
       let upInterval = setInterval(() => {
         if (position >= 160) {
           clearInterval(upInterval);
-
           let downInterval = setInterval(() => {
             if (position <= 40) {
               clearInterval(downInterval);
               isJumping = false;
+              pato.style.animationPlayState = 'running';
             }
             position -= 5;
-            mario.style.bottom = position + "px";
+            pato.style.bottom = position + 'px';
           }, 20);
         }
-
         position += 5;
-        mario.style.bottom = position + "px";
+        pato.style.bottom = position + 'px';
       }, 20);
     }
 
-    function createBlock() {
-      const bloco = document.createElement("div");
-      bloco.classList.add("bloco");
-      game.appendChild(bloco);
+    function duck() {
+      if (!gameRunning) return;
+      if (isDucking || isJumping) return;
+      isDucking = true;
+      pato.style.height = '24px';
+      pato.style.bottom = '40px';
+      setTimeout(() => {
+        pato.style.height = '48px';
+        isDucking = false;
+      }, 1000);
+    }
 
-      let blocoPosition = 800;
-      bloco.style.left = blocoPosition + "px";
+    function shoot() {
+      if (!gameRunning) return;
+      const tiro = document.createElement('div');
+      tiro.classList.add('tiro');
+      tiro.style.left = '98px';
+      tiro.style.bottom = position + 20 + 'px';
+      game.appendChild(tiro);
+
+      let tiroInterval = setInterval(() => {
+        let tiroLeft = parseInt(tiro.style.left);
+        if (tiroLeft > 800) {
+          clearInterval(tiroInterval);
+          if (game.contains(tiro)) game.removeChild(tiro);
+        } else {
+          tiro.style.left = tiroLeft + 10 + 'px';
+
+          const obstaculos = document.querySelectorAll('.obstaculo');
+          obstaculos.forEach(obs => {
+            const obsLeft = parseInt(obs.style.left);
+            const obsWidth = obs.offsetWidth;
+            const obsBottom = parseInt(obs.style.bottom);
+            const obsHeight = obs.offsetHeight;
+
+            if (tiroLeft + 10 >= obsLeft && tiroLeft <= obsLeft + obsWidth &&
+                position + 20 >= obsBottom && position + 20 <= obsBottom + obsHeight) {
+              if (game.contains(obs)) game.removeChild(obs);
+              if (game.contains(tiro)) game.removeChild(tiro);
+              clearInterval(tiroInterval);
+              score += 2;
+              scoreDisplay.textContent = score;
+            }
+          });
+        }
+      }, 20);
+    }
+
+    function createObstacle() {
+      if (!gameRunning) return;
+      const obstaculo = document.createElement('div');
+      obstaculo.classList.add('obstaculo','arvore');
+      game.appendChild(obstaculo);
+
+      let obstaculoPosition = 800;
+      obstaculo.style.left = obstaculoPosition + 'px';
 
       let timer = setInterval(() => {
-        if (blocoPosition < -40) {
+        if (!gameRunning) { clearInterval(timer); return; }
+        if (obstaculoPosition < -50) {
           clearInterval(timer);
-          game.removeChild(bloco);
+          if (game.contains(obstaculo)) game.removeChild(obstaculo);
           score++;
           scoreDisplay.textContent = score;
-        } else if (
-          blocoPosition > 50 && blocoPosition < 90 &&
-          position < 80
-        ) {
+        } else if (obstaculoPosition > 50 && obstaculoPosition < 98 &&
+                   position < 100) { // colisão
+          gameOver();
           clearInterval(timer);
-          alert("💀 Game Over! Pontuação: " + score);
-          document.location.reload();
         }
-
-        blocoPosition -= 5;
-        bloco.style.left = blocoPosition + "px";
+        obstaculoPosition -= 5;
+        obstaculo.style.left = obstaculoPosition + 'px';
       }, 20);
 
-      setTimeout(createBlock, Math.random() * 2000 + 1500);
+      setTimeout(createObstacle, Math.random()*3000+1000);
     }
 
-    document.addEventListener("keydown", e => {
-      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    function gameOver() {
+      gameRunning = false;
+      gameOverDiv.style.display = 'flex';
+    }
+
+    function restartGame() {
+      location.reload();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') jump();
+      if (e.code === 'ArrowDown') duck();
+      if (e.code === 'KeyS') shoot();
     });
 
-    createBlock();
+    jumpBtn.addEventListener('click', jump);
+    duckBtn.addEventListener('click', duck);
+    shootBtn.addEventListener('click', shoot);
+
+    createObstacle();
   </script>
 </body>
 </html>
