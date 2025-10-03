@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo do Pato</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f7f7f7;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #game {
+      width: 800px;
+      height: 200px;
+      border: 2px solid #333;
+      position: relative;
+      overflow: hidden;
+      background: white;
+    }
+
+    /* Pato */
+    #pato {
+      width: 60px;
+      height: 60px;
+      background: url("https://cdn-icons-png.flaticon.com/512/616/616408.png") no-repeat center/cover;
+      position: absolute;
+      bottom: 0;
+      left: 50px;
+    }
+
+    /* Árvore (obstáculo) */
+    .arvore {
+      width: 40px;
+      height: 60px;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+
+    .tronco {
+      width: 10px;
+      height: 30px;
+      background: sienna;
+      position: absolute;
+      bottom: 0;
+      left: 15px;
+    }
+
+    .copa {
+      width: 40px;
+      height: 40px;
+      background: green;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="pato"></div>
+    <div id="score">0</div>
+  </div>
+
+  <script>
+    const pato = document.getElementById("pato");
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+
+    let isJumping = false;
+    let position = 0;
+    let score = 0;
+
+    function jump() {
+      if (isJumping) return;
+      isJumping = true;
+
+      let upInterval = setInterval(() => {
+        if (position >= 120) {
+          clearInterval(upInterval);
+
+          let downInterval = setInterval(() => {
+            if (position <= 0) {
+              clearInterval(downInterval);
+              isJumping = false;
+            }
+            position -= 5;
+            pato.style.bottom = position + "px";
+          }, 20);
+        }
+
+        position += 5;
+        pato.style.bottom = position + "px";
+      }, 20);
+    }
+
+    function createTree() {
+      const arvore = document.createElement("div");
+      arvore.classList.add("arvore");
+
+      const tronco = document.createElement("div");
+      tronco.classList.add("tronco");
+      const copa = document.createElement("div");
+      copa.classList.add("copa");
+
+      arvore.appendChild(tronco);
+      arvore.appendChild(copa);
+
+      game.appendChild(arvore);
+
+      let arvorePosition = 800;
+      arvore.style.left = arvorePosition + "px";
+
+      let timer = setInterval(() => {
+        if (arvorePosition < -40) {
+          clearInterval(timer);
+          game.removeChild(arvore);
+          score++;
+          scoreDisplay.textContent = score;
+        } else if (
+          arvorePosition > 50 && arvorePosition < 90 &&
+          position < 40
+        ) {
+          clearInterval(timer);
+          alert("💀 Game Over! Pontuação: " + score);
+          document.location.reload();
+        }
+
+        arvorePosition -= 5;
+        arvore.style.left = arvorePosition + "px";
+      }, 20);
+
+      setTimeout(createTree, Math.random() * 2000 + 1000);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    });
+
+    createTree();
+  </script>
+</body>
+  </html>
