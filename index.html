@@ -2,63 +2,54 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Jogo do Pato</title>
+  <title>Super Mario Runner</title>
   <style>
     body {
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #f7f7f7;
+      background: #5c94fc; /* Céu azul Mario */
       overflow: hidden;
       font-family: Arial, sans-serif;
     }
 
     #game {
       width: 800px;
-      height: 200px;
+      height: 250px;
       border: 2px solid #333;
       position: relative;
       overflow: hidden;
-      background: white;
+      background: #5c94fc;
     }
 
-    /* Pato */
-    #pato {
-      width: 60px;
+    /* Mario personagem */
+    #mario {
+      width: 50px;
       height: 60px;
-      background: url("https://cdn-icons-png.flaticon.com/512/616/616408.png") no-repeat center/cover;
+      background: url("https://i.ibb.co/YZnSPvv/mario.png") no-repeat center/cover;
       position: absolute;
-      bottom: 0;
+      bottom: 40px; /* fica em cima do chão */
       left: 50px;
     }
 
-    /* Árvore (obstáculo) */
-    .arvore {
-      width: 40px;
-      height: 60px;
+    /* Chão estilo Mario */
+    #chao {
+      width: 100%;
+      height: 40px;
+      background: url("https://i.ibb.co/R3k4tk1/mario-ground.png") repeat-x;
       position: absolute;
       bottom: 0;
-      right: 0;
+      left: 0;
     }
 
-    .tronco {
-      width: 10px;
-      height: 30px;
-      background: sienna;
-      position: absolute;
-      bottom: 0;
-      left: 15px;
-    }
-
-    .copa {
+    /* Obstáculo: bloco estilo Mario */
+    .bloco {
       width: 40px;
       height: 40px;
-      background: green;
-      border-radius: 50%;
+      background: url("https://i.ibb.co/FV8wCzH/mario-block.png") no-repeat center/cover;
       position: absolute;
-      bottom: 20px;
-      left: 0;
+      bottom: 40px;
     }
 
     #score {
@@ -67,22 +58,25 @@
       right: 10px;
       font-size: 20px;
       font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px black;
     }
   </style>
 </head>
 <body>
   <div id="game">
-    <div id="pato"></div>
+    <div id="mario"></div>
+    <div id="chao"></div>
     <div id="score">0</div>
   </div>
 
   <script>
-    const pato = document.getElementById("pato");
+    const mario = document.getElementById("mario");
     const game = document.getElementById("game");
     const scoreDisplay = document.getElementById("score");
 
     let isJumping = false;
-    let position = 0;
+    let position = 40; // altura inicial (em cima do chão)
     let score = 0;
 
     function jump() {
@@ -90,68 +84,59 @@
       isJumping = true;
 
       let upInterval = setInterval(() => {
-        if (position >= 120) {
+        if (position >= 160) {
           clearInterval(upInterval);
 
           let downInterval = setInterval(() => {
-            if (position <= 0) {
+            if (position <= 40) {
               clearInterval(downInterval);
               isJumping = false;
             }
             position -= 5;
-            pato.style.bottom = position + "px";
+            mario.style.bottom = position + "px";
           }, 20);
         }
 
         position += 5;
-        pato.style.bottom = position + "px";
+        mario.style.bottom = position + "px";
       }, 20);
     }
 
-    function createTree() {
-      const arvore = document.createElement("div");
-      arvore.classList.add("arvore");
+    function createBlock() {
+      const bloco = document.createElement("div");
+      bloco.classList.add("bloco");
+      game.appendChild(bloco);
 
-      const tronco = document.createElement("div");
-      tronco.classList.add("tronco");
-      const copa = document.createElement("div");
-      copa.classList.add("copa");
-
-      arvore.appendChild(tronco);
-      arvore.appendChild(copa);
-
-      game.appendChild(arvore);
-
-      let arvorePosition = 800;
-      arvore.style.left = arvorePosition + "px";
+      let blocoPosition = 800;
+      bloco.style.left = blocoPosition + "px";
 
       let timer = setInterval(() => {
-        if (arvorePosition < -40) {
+        if (blocoPosition < -40) {
           clearInterval(timer);
-          game.removeChild(arvore);
+          game.removeChild(bloco);
           score++;
           scoreDisplay.textContent = score;
         } else if (
-          arvorePosition > 50 && arvorePosition < 90 &&
-          position < 40
+          blocoPosition > 50 && blocoPosition < 90 &&
+          position < 80
         ) {
           clearInterval(timer);
           alert("💀 Game Over! Pontuação: " + score);
           document.location.reload();
         }
 
-        arvorePosition -= 5;
-        arvore.style.left = arvorePosition + "px";
+        blocoPosition -= 5;
+        bloco.style.left = blocoPosition + "px";
       }, 20);
 
-      setTimeout(createTree, Math.random() * 2000 + 1000);
+      setTimeout(createBlock, Math.random() * 2000 + 1500);
     }
 
     document.addEventListener("keydown", e => {
       if (e.code === "Space" || e.code === "ArrowUp") jump();
     });
 
-    createTree();
+    createBlock();
   </script>
 </body>
-  </html>
+</html>
